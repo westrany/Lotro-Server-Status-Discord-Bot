@@ -41,7 +41,22 @@ const serverUrls = {
 };
 
 // Check server status
-async function checkServers() {
+async function checkServerStatus(serverName) {
+  const url = serverUrls[serverName];
+  if (!url) return `Server "${serverName}" not found.`;
+
+  try {
+    const response = await axios.get(url);
+    const isUp = response.data.includes('AngmarStd');
+    return `${serverName}: ${isUp ? 'UP' : 'DOWN'}`;
+  } catch (error) {
+    console.error(`Error checking ${serverName}: ${error.message}`);
+    return `${serverName}: ERROR`;
+  }
+}
+
+// Check all servers
+async function checkAllServers() {
   let serversUp = 0;
   const totalServers = Object.keys(serverUrls).length;
   const serverStatuses = [];
@@ -50,18 +65,16 @@ async function checkServers() {
     try {
       const response = await axios.get(url);
       const isUp = response.data.includes('AngmarStd');
-      serverStatuses.push({ serverName, status: isUp ? 'UP' : 'DOWN' });
+      serverStatuses.push(`${serverName}: ${isUp ? 'UP' : 'DOWN'}`);
       if (isUp) serversUp++;
     } catch (error) {
       console.error(`Error checking ${serverName}: ${error.message}`);
-      serverStatuses.push({ serverName, status: 'ERROR' });
+      serverStatuses.push(`${serverName}: ERROR`);
     }
   }
 
-  return {
-    worldStatus: serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN",
-    serverStatuses,
-  };
+  const worldStatus = serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN";
+  return `World Status: ${worldStatus}\n` + serverStatuses.join('\n');
 }
 
 // Single interaction handler
@@ -72,12 +85,16 @@ client.on('interactionCreate', async interaction => {
     try {
       await interaction.deferReply();  // Defer to give time to fetch the status
 
-      // Fetch the server statuses
-      const { worldStatus, serverStatuses } = await checkServers();
-      let statusMessage = `World Status: ${worldStatus}\n`;
-      serverStatuses.forEach(({ serverName, status }) => {
-        statusMessage += `${serverName}: ${status}\n`;
-      });
+      const serverName = interaction.options.getString('server');  // Get the server name from the user input
+      let statusMessage;
+
+      if (serverName) {
+        // Fetch the status for a specific server
+        statusMessage = await checkServerStatus(serverName);
+      } else {
+        // Fetch the status for all servers
+        statusMessage = await checkAllServers();
+      }
 
       await interaction.editReply(statusMessage);  // Edit the reply with the status message
     } catch (error) {
