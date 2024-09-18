@@ -1,0 +1,25 @@
+{
+  "name": "Lotro-Server-Status-Discord-Bot",
+  "version": "1.0.0",
+  "description": "A bot for Discord servers that gives updates on server status for the Lord of the Rings Online",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/westrany/Lotro-Server-Status-Discord-Bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/westrany/Lotro-Server-Status-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/westrany/Lotro-Server-Status-Discord-Bot#readme",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "discord.js": "^14.16.2",
+    "soap": "^1.1.4"
+  }
+}
