@@ -9,6 +9,9 @@ const commands = [
       option.setName('server')
         .setDescription('The name of the server you want to check')
         .setRequired(false)), // The server option is optional
+  new SlashCommandBuilder()
+    .setName('monitor')
+    .setDescription('Start monitoring server statuses and post updates when they change')
 ];
 
 // Export commands
