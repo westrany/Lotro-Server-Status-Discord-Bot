@@ -1,11 +1,9 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const soap = require('soap');
 const axios = require('axios');
 
 // Create a new Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// const WSDL_URL = 'https://gls.lotro.com/GLS.DataCenterServer/Service.asmx?WSDL';
 const serverUrls = {
     'Angmar': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.73',
     'Arkenstone': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.103',
@@ -26,28 +24,42 @@ client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
-// Function to check server status
-async function checkServerStatus() {
-    const statuses = {};
-    for (const [server, url] of Object.entries(serverUrls)) {
+// Function to check the status of each server
+async function checkServers() {
+    let serversUp = 0; // Counter for how many servers are up
+    const totalServers = Object.keys(serverUrls).length;
+    const serverStatuses = [];
+
+    // Cycle through each server
+    for (const [serverName, url] of Object.entries(serverUrls)) {
         try {
+            // Fetch the status page for each server
             const response = await axios.get(url);
-            statuses[server] = response.data.includes('AngmarStd') ? 'OPEN' : 'DOWN';
+
+            // Check if the page contains 'AngmarStd' (indicating the server is up)
+            const isUp = response.data.includes('AngmarStd');
+            serverStatuses.push({ serverName, status: isUp ? 'UP' : 'DOWN' });
+
+            if (isUp) serversUp++;
         } catch (error) {
-            statuses[server] = 'ERROR';
-            console.error(`Error checking status for ${server}:`, error);
+            console.error(`Error checking ${serverName}: ${error.message}`);
+            serverStatuses.push({ serverName, status: 'ERROR' });
         }
     }
-    return statuses;
+
+    return {
+        worldStatus: serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN",
+        serverStatuses
+    };
 }
 
 // Command handler
 client.on('messageCreate', async (message) => {
     if (message.content === '!status') {
-        const statuses = await checkServerStatus();
-        let statusMessage = 'LOTRO Server Status:\n';
-        for (const [server, status] of Object.entries(statuses)) {
-            statusMessage += `${server}: ${status}\n`;
+        const { worldStatus, serverStatuses } = await checkServers();
+        let statusMessage = `World Status: ${worldStatus}\n`;
+        for (const { serverName, status } of serverStatuses) {
+            statusMessage += `${serverName}: ${status}\n`;
         }
         message.channel.send(statusMessage);
     }
