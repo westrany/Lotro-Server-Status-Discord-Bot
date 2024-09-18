@@ -3,29 +3,28 @@ A Discord bot built to monitor and provide updates on the server statuses for th
 
 Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?client_id=1285998173294301234&permissions=2147567680&integration_type=0&scope=bot+applications.commands)!
 
-![lotro server status](https://github.com/user-attachments/assets/4cf79ba0-0e03-469e-9c21-0bd2d3d07719)
 
 
 # Index  
 
-1. [Features](#features)
-2. [Technologies Used](#technologies-used)
-3. [Getting Started](#getting-started)
-    3.1. [Prerequisites](#prerequisites)
-    3.2. [Clone the Repository](#clone-the-repository)
-    3.3. [Install dependencies with NPM install](#install-dependencies-with-npm-install)
-    3.4. [Environment Variables](#environment-variables)
-    3.5. [Bot Commands](#bot-commands)
-4. [How to Run the Bot Locally](#how-to-run-the-bot-locally)
-5. [Deploying the Bot with Railway](#deploying-the-bot-with-railway)
-6. [Commands Overview](#commands-overview)
-    6.1. [/status](#status)
-    6.2. [/monitor](#monitor)
-7. [Known Issues](#known-issues)
-8. [Contributions](#contributions)
-9. [License](#license)
-10. [Acknowledgements](#acknowledgements)
-11. [Final Notes](#final-notes)
+1. [Features](#features)  
+2. [Technologies Used](#technologies-used)  
+3. [Getting Started](#getting-started)  
+    3.1. [Prerequisites](#prerequisites)  
+    3.2. [Clone the Repository](#clone-the-repository)  
+    3.3. [Install dependencies with NPM install](#install-dependencies-with-npm-install)  
+    3.4. [Environment Variables](#environment-variables)  
+    3.5. [Bot Commands](#bot-commands)  
+4. [How to Run the Bot Locally](#how-to-run-the-bot-locally)  
+5. [Deploying the Bot with Railway](#deploying-the-bot-with-railway)  
+6. [Commands Overview](#commands-overview)  
+    6.1. [/status](#status)  
+    6.2. [/monitor](#monitor)  
+7. [Known Issues](#known-issues)  
+8. [Contributions](#contributions)  
+9. [License](#license)  
+10. [Acknowledgements](#acknowledgements)  
+11. [Final Notes](#final-notes)  
 
 ## Features  
 
