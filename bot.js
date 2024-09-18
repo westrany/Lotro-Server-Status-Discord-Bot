@@ -1,5 +1,5 @@
 require('dotenv').config(); // Load environment variables from .env
-const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const commands = require('./commands.js'); // Import commands
 const { createServerStatusEmbed, createAllServerStatusEmbed } = require('./embeds.js'); // Import embed functions
@@ -71,6 +71,44 @@ async function checkAllServers() {
   return serverStatuses;
 }
 
+// Function to monitor server statuses and send updates
+async function monitorServerStatuses(channel) {
+  const checkInterval = 60000; // Check every 60 seconds
+
+  setInterval(async () => {
+    const currentStatuses = await checkAllServers();
+
+    // Compare current status with the previous ones
+    for (const [serverName, status] of Object.entries(currentStatuses)) {
+      const previousStatus = previousServerStatuses[serverName];
+
+      if (status !== previousStatus) {
+        // Send warning message when a server changes its status
+        let warningMessage;
+        if (status === 'UP') {
+          warningMessage = `✅ ${serverName} is back up ✅`;
+        } else {
+          warningMessage = `⚠️ ${serverName} is down! ⚠️`;
+        }
+
+        // Send the warning message as an embed
+        const embed = new EmbedBuilder()
+          .setColor(status === 'UP' ? '#00FF00' : '#FF0000')  // Green for UP, Red for DOWN
+          .setDescription(warningMessage)
+          .setTimestamp();
+        await channel.send({ embeds: [embed] });
+
+        // Send full server status embed after the warning
+        const fullStatusEmbed = createAllServerStatusEmbed(currentStatuses);
+        await channel.send({ embeds: [fullStatusEmbed] });
+
+        // Update the stored previous status
+        previousServerStatuses[serverName] = status;
+      }
+    }
+  }, checkInterval);
+}
+
 // Single interaction handler
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
@@ -119,10 +157,8 @@ client.on('interactionCreate', async interaction => {
 
       // Set up monitoring and inform the user
       monitoringChannel = interaction.channel;
+      monitorServerStatuses(interaction.channel);  // Start monitoring server statuses
       await interaction.editReply('Server status monitoring enabled in this channel.');
-
-      // Start monitoring server statuses
-      monitorServerStatuses(interaction.channel);
     } catch (error) {
       console.error('Error enabling monitor:', error);
       await interaction.editReply('There was an error enabling the server status monitor.');
