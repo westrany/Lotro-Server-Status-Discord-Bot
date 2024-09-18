@@ -2,6 +2,7 @@ require('dotenv').config(); // Load environment variables from .env
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const axios = require('axios');
 const commands = require('./commands.js'); // Import commands
+const { createServerStatusEmbed, createAllServerStatusEmbed } = require('./embeds.js'); // Import embed functions
 
 // Emojis to be used for singular server status enquiries
 const happyEmojis = ['😊', '😇', '💚', '🧙🏻‍♂️'];
@@ -70,34 +71,6 @@ async function checkAllServers() {
   return serverStatuses;
 }
 
-// Function to monitor server statuses
-async function monitorServerStatuses(channel) {
-  setInterval(async () => {
-    const currentStatuses = await checkAllServers();
-
-    // Compare current status with the previous ones
-    for (const [serverName, status] of Object.entries(currentStatuses)) {
-      if (previousServerStatuses[serverName] && previousServerStatuses[serverName] !== status) {
-        const upMessage = `🎉 ${serverName} is back up 🎉`;
-        const downMessage = `⚠️ ${serverName} is down! ⚠️`;
-        await channel.send(status === 'UP' ? upMessage : downMessage);
-      }
-    }
-
-    // Fetch all server statuses and display in simple list format
-    let statusMessage = "";
-    for (const [server, status] of Object.entries(currentStatuses)) {
-      const statusIcon = status === 'UP' ? '✅' : '⛔';
-      statusMessage += `${statusIcon} ${server}\n`;
-    }
-
-    await channel.send(statusMessage);
-
-    // Update the previous statuses
-    previousServerStatuses = currentStatuses;
-  }, 60000);  // Check every 60 seconds
-}
-
 // Single interaction handler
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
@@ -121,24 +94,21 @@ client.on('interactionCreate', async interaction => {
         );
 
         if (serverKey) {
-          // If server name is found, return the status with emoji
+          // If server name is found, return the status with emoji using an embed
           const statusEmoji = serverStatuses[serverKey] === 'UP' ? getRandomEmoji(happyEmojis) : getRandomEmoji(sadEmojis);
-          statusMessage = `${serverKey} is ${serverStatuses[serverKey]} ${statusEmoji}`;
+          const embed = createServerStatusEmbed(serverKey, serverStatuses[serverKey], statusEmoji);
+          await interaction.editReply({ embeds: [embed] });
         } else {
           // Server name not found
           statusMessage = `Server "${serverName}" not found.`;
+          await interaction.editReply(statusMessage);  // Send a simple reply if server not found
         }
       } else {
-        // Fetch all server statuses and display in simple list format
+        // Fetch all server statuses and display in an embed
         const serverStatuses = await checkAllServers();
-        statusMessage = "";
-        for (const [server, status] of Object.entries(serverStatuses)) {
-          const statusIcon = status === 'UP' ? '✅' : '⛔';
-          statusMessage += `${statusIcon} ${server}\n`;
-        }
+        const embed = createAllServerStatusEmbed(serverStatuses);
+        await interaction.editReply({ embeds: [embed] });
       }
-
-      await interaction.editReply(statusMessage);  // Edit deferred reply with status
     } catch (error) {
       console.error('Error while handling interaction:', error);
       await interaction.editReply('There was an error processing your request.');
