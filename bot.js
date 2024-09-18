@@ -74,16 +74,26 @@ async function checkServers() {
 
 // Respond to the slash command
 client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
-
-  if (interaction.commandName === 'status') {
-    const { worldStatus, serverStatuses } = await checkServers();
-    let statusMessage = `World Status: ${worldStatus}\n`;
-    serverStatuses.forEach(({ serverName, status }) => {
-      statusMessage += `${serverName}: ${status}\n`;
-    });
-    await interaction.reply(statusMessage);
-  }
-});
-
-client.login(process.env.DISCORD_TOKEN);
+    console.log('Interaction received:', interaction.commandName); // Log interaction
+  
+    try {
+      await interaction.deferReply();
+      console.log('Reply deferred'); // Log after deferring the reply
+  
+      if (interaction.commandName === 'status') {
+        const { worldStatus, serverStatuses } = await checkServers();
+        let statusMessage = `World Status: ${worldStatus}\n`;
+        serverStatuses.forEach(({ serverName, status }) => {
+          statusMessage += `${serverName}: ${status}\n`;
+        });
+  
+        await interaction.editReply(statusMessage);
+        console.log('Reply sent successfully'); // Log after sending the reply
+      }
+    } catch (error) {
+      console.error('Error handling interaction:', error);
+      await interaction.editReply('There was an error while processing your request.');
+    }
+  });
+  
+  
