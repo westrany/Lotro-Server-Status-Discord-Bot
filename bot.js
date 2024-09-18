@@ -84,18 +84,18 @@ async function monitorServerStatuses(channel) {
       }
     }
 
-    // Update and display server statuses with emoji and server name in a simple list
-    statusMessage = "";
+    // Fetch all server statuses and display in simple list format
+    let statusMessage = "";
     for (const [server, status] of Object.entries(currentStatuses)) {
-    const statusIcon = status === 'UP' ? '✅' : '⛔';
-    statusMessage += `${statusIcon} ${server}\n`;
+      const statusIcon = status === 'UP' ? '✅' : '⛔';
+      statusMessage += `${statusIcon} ${server}\n`;
     }
 
     await channel.send(statusMessage);
 
     // Update the previous statuses
     previousServerStatuses = currentStatuses;
-    }, 60000);  // Check every 60 seconds
+  }, 60000);  // Check every 60 seconds
 }
 
 // Single interaction handler
@@ -129,12 +129,12 @@ client.on('interactionCreate', async interaction => {
           statusMessage = `Server "${serverName}" not found.`;
         }
       } else {
-        // Fetch all server statuses and display as a table
+        // Fetch all server statuses and display in simple list format
         const serverStatuses = await checkAllServers();
-        statusMessage = "**SERVER NAME | STATUS**\n";
+        statusMessage = "";
         for (const [server, status] of Object.entries(serverStatuses)) {
           const statusIcon = status === 'UP' ? '✅' : '⛔';
-          statusMessage += `${server.padEnd(20)} | ${statusIcon}\n`;
+          statusMessage += `${statusIcon} ${server}\n`;
         }
       }
 
