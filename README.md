@@ -28,6 +28,8 @@ Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?
 
 ## Features  
 
+![image](https://github.com/user-attachments/assets/a5f85574-5451-4550-9711-571f0cbc8b41)   
+
 - **/status:** Check the status of all LOTRO servers or a specific server.
 - **/monitor:** Monitor server statuses and receive updates when they change.
 - **Status notifications** are embedded for clarity and aesthetics.
@@ -97,7 +99,14 @@ The bot will now be live and ready to interact in your Discord server.
 **Description:** Check the status of all LOTRO servers or a specific server.  
 
 - Example: ``/status`` shows the status of all servers.  
-- Example: ``/status server:Angmar`` shows the status of the "Angmar" server.    
+
+![image](https://github.com/user-attachments/assets/b086a2a2-1836-4919-849d-27acc3c3e9de)  
+
+  
+- Example: ``/status server:Angmar`` shows the status of the "Angmar" server.
+
+![image](https://github.com/user-attachments/assets/c130aeb6-111d-454e-81f2-4939062371ca)  
+ 
 
 ### ```/monitor```  
 
@@ -105,6 +114,9 @@ The bot will now be live and ready to interact in your Discord server.
 
 - Example: ```/monitor``` in a channel will enable monitoring in that channel.  
 - The bot will send grouped status changes for multiple servers.
+
+![image](https://github.com/user-attachments/assets/952d22a3-3212-4287-a0b1-4395cfffac5a)  
+
 
 ## Known Issues  
 
