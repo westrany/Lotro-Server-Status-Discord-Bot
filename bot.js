@@ -84,17 +84,19 @@ async function monitorServerStatuses(channel) {
       }
     }
 
-    // Update and display the full status table
-    let statusTable = "**SERVER NAME | STATUS**\n";
+    // Update and display server statuses with emoji and server name in a simple list
+    statusMessage = "";
     for (const [server, status] of Object.entries(currentStatuses)) {
-      const statusIcon = status === 'UP' ? '✅' : '⛔';
-      statusTable += `${server.padEnd(20)} | ${statusIcon}\n`;
+    const statusIcon = status === 'UP' ? '✅' : '⛔';
+    statusMessage += `${statusIcon} ${server}\n`;
     }
-    await channel.send(statusTable);
+
+    await channel.send(statusMessage);
 
     // Update the previous statuses
     previousServerStatuses = currentStatuses;
-  }, 60000);  // Check every 60 seconds
+    }, 60000);  // Check every 60 seconds
+
 }
 
 // Single interaction handler
