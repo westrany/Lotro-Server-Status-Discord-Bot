@@ -1,69 +1,88 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const axios = require('axios');
+const { token, clientId, guildId } = require('./config.json');
 
-// Create a new Discord client
+// Initialize the Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+// Register the /status command
+const commands = [
+  {
+    name: 'status',
+    description: 'Check the status of LOTRO servers',
+  },
+];
+
+const rest = new REST({ version: '10' }).setToken(token);
+
+(async () => {
+  try {
+    console.log('Started refreshing application (/) commands.');
+
+    await rest.put(
+      Routes.applicationGuildCommands(clientId, guildId),
+      { body: commands }
+    );
+
+    console.log('Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error(error);
+  }
+})();
+
+// Server URLs
 const serverUrls = {
-    'Angmar': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.73',
-    'Arkenstone': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.103',
-    'Belegaer': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.153',
-    'Brandywine': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.113',
-    'Crickhollow': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.123',
-    'Evernight': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.163',
-    'Gladden': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.133',
-    'Gwaihir': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.173',
-    'Landroval': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.143',
-    'Laurelin': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.183',
-    'Mordor': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.33.111.10',
-    'Sirannon': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.193',
-    'Treebeard': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.137'
+  'Angmar': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.73',
+  'Arkenstone': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.103',
+  'Belegaer': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.153',
+  'Brandywine': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.113',
+  'Crickhollow': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.123',
+  'Evernight': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.163',
+  'Gladden': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.133',
+  'Gwaihir': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.173',
+  'Landroval': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.143',
+  'Laurelin': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.183',
+  'Mordor': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.33.111.10',
+  'Sirannon': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.193',
+  'Treebeard': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.137',
 };
 
-client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-});
-
-// Function to check the status of each server
+// Check server status
 async function checkServers() {
-    let serversUp = 0; // Counter for how many servers are up
-    const totalServers = Object.keys(serverUrls).length;
-    const serverStatuses = [];
+  let serversUp = 0;
+  const totalServers = Object.keys(serverUrls).length;
+  const serverStatuses = [];
 
-    // Cycle through each server
-    for (const [serverName, url] of Object.entries(serverUrls)) {
-        try {
-            // Fetch the status page for each server
-            const response = await axios.get(url);
-
-            // Check if the page contains 'AngmarStd' (indicating the server is up)
-            const isUp = response.data.includes('AngmarStd');
-            serverStatuses.push({ serverName, status: isUp ? 'UP' : 'DOWN' });
-
-            if (isUp) serversUp++;
-        } catch (error) {
-            console.error(`Error checking ${serverName}: ${error.message}`);
-            serverStatuses.push({ serverName, status: 'ERROR' });
-        }
+  for (const [serverName, url] of Object.entries(serverUrls)) {
+    try {
+      const response = await axios.get(url);
+      const isUp = response.data.includes('AngmarStd');
+      serverStatuses.push({ serverName, status: isUp ? 'UP' : 'DOWN' });
+      if (isUp) serversUp++;
+    } catch (error) {
+      console.error(`Error checking ${serverName}: ${error.message}`);
+      serverStatuses.push({ serverName, status: 'ERROR' });
     }
+  }
 
-    return {
-        worldStatus: serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN",
-        serverStatuses
-    };
+  return {
+    worldStatus: serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN",
+    serverStatuses,
+  };
 }
 
-// Command handler
-client.on('messageCreate', async (message) => {
-    if (message.content === '!status') {
-        const { worldStatus, serverStatuses } = await checkServers();
-        let statusMessage = `World Status: ${worldStatus}\n`;
-        for (const { serverName, status } of serverStatuses) {
-            statusMessage += `${serverName}: ${status}\n`;
-        }
-        message.channel.send(statusMessage);
-    }
+// Respond to the slash command
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
+
+  if (interaction.commandName === 'status') {
+    const { worldStatus, serverStatuses } = await checkServers();
+    let statusMessage = `World Status: ${worldStatus}\n`;
+    serverStatuses.forEach(({ serverName, status }) => {
+      statusMessage += `${serverName}: ${status}\n`;
+    });
+    await interaction.reply(statusMessage);
+  }
 });
 
-// Login the bot
-client.login('BOT-TOKEN-HERE');
+client.login(token);
