@@ -1,5 +1,5 @@
-const { commands } = require('./commands.js'); // Require the commands
-const fetch = require('node-fetch'); // Use require for node-fetch
+const { commands } = require('./commands.js'); // CommonJS for commands
+const fetch = require('node-fetch'); // CommonJS for node-fetch
 
 const token = process.env.DISCORD_TOKEN;
 const applicationId = process.env.DISCORD_APPLICATION_ID;
@@ -24,8 +24,8 @@ async function registerGlobalCommands() {
  * Function to send the request to Discord API to register commands
  */
 async function registerCommands(url) {
-  // Log the commands before sending to ensure they're valid
-  console.log('Registering commands:', JSON.stringify(commands, null, 2));
+  // Log the commands to make sure they're correctly loaded
+  console.log('Registering commands:', commands);
 
   const response = await fetch(url, {
     headers: {
@@ -46,5 +46,4 @@ async function registerCommands(url) {
   return response;
 }
 
-// Call the function to register the global commands
 registerGlobalCommands();
