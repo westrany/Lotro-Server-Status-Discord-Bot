@@ -54,4 +54,4 @@ client.on('messageCreate', async (message) => {
 });
 
 // Login the bot
-client.login('MTI4NTk5ODE3MzI5NDMwMTIzNA.GJxqkl.1tH8Ndas4CjbB3oBtHNhnsgJDR7u-iQakI1UOQ');
+client.login('BOT-TOKEN-HERE');
