@@ -3,7 +3,8 @@ A Discord bot built to monitor and provide updates on the server statuses for th
 
 Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?client_id=1285998173294301234&permissions=2147567680&integration_type=0&scope=bot+applications.commands)!
 
-![lotro banner](https://github.com/user-attachments/assets/1c8d10d4-1aa9-42fc-9fba-fa23ea0a89f0)  
+![lotro server status](https://github.com/user-attachments/assets/4cf79ba0-0e03-469e-9c21-0bd2d3d07719)
+
 
 # Index  
 
