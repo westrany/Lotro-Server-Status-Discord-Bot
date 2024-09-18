@@ -79,8 +79,8 @@ async function checkAllServers() {
     }, 60000);  // Check every 60 seconds
   }
   
-  // Single interaction handler
-  client.on('interactionCreate', async interaction => {
+// Single interaction handler
+client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
   
     if (interaction.commandName === 'status') {
@@ -91,11 +91,23 @@ async function checkAllServers() {
         let statusMessage;
   
         if (serverName) {
-          // Fetch specific server status
-          const serverStatuses = await checkAllServers();
-          statusMessage = serverStatuses[serverName]
-            ? `${serverName}: ${serverStatuses[serverName]}`
-            : `Server "${serverName}" not found.`;
+          // Normalize server name to lowercase for case-insensitive matching
+          const normalizedServerName = serverName.toLowerCase();
+  
+          const serverStatuses = await checkAllServers();  // Fetch all server statuses
+  
+          // Convert server names to lowercase for comparison
+          const serverKey = Object.keys(serverStatuses).find(
+            key => key.toLowerCase() === normalizedServerName
+          );
+  
+          if (serverKey) {
+            // If server name is found, return the status
+            statusMessage = `${serverKey}: ${serverStatuses[serverKey]}`;
+          } else {
+            // Server name not found
+            statusMessage = `Server "${serverName}" not found.`;
+          }
         } else {
           // Fetch all server statuses
           const serverStatuses = await checkAllServers();
@@ -126,5 +138,6 @@ async function checkAllServers() {
       }
     }
   });
+  
   
   client.login(process.env.DISCORD_TOKEN);
