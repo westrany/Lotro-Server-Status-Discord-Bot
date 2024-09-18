@@ -96,7 +96,6 @@ async function monitorServerStatuses(channel) {
     // Update the previous statuses
     previousServerStatuses = currentStatuses;
     }, 60000);  // Check every 60 seconds
-
 }
 
 // Single interaction handler
