@@ -105,17 +105,35 @@ async function monitorServerStatuses(channel) {
 
     // Only send messages if the status has changed
     if (hasStatusChanged) {
-      // Send grouped messages for servers going up or down
-      if (serversUp.length > 0) {
-        const upMessage = `✅ ${serversUp.join(', ')} ${serversUp.length > 1 ? 'are' : 'is'} back up ✅`;
-        const upEmbed = new EmbedBuilder().setColor('#00FF00').setDescription(upMessage).setTimestamp();
-        await channel.send({ embeds: [upEmbed] });
-      }
+      // Handle cases where all servers are up or down
+      const allServersUp = Object.values(currentStatuses).every(status => status === 'UP');
+      const allServersDown = Object.values(currentStatuses).every(status => status === 'DOWN');
 
-      if (serversDown.length > 0) {
-        const downMessage = `⚠️ ${serversDown.join(', ')} ${serversDown.length > 1 ? 'are' : 'is'} down! ⚠️`;
-        const downEmbed = new EmbedBuilder().setColor('#FF0000').setDescription(downMessage).setTimestamp();
-        await channel.send({ embeds: [downEmbed] });
+      if (allServersUp) {
+        const allUpEmbed = new EmbedBuilder()
+          .setColor('#00FF00')
+          .setDescription('🎉 All servers are up 🎉')
+          .setTimestamp();
+        await channel.send({ embeds: [allUpEmbed] });
+      } else if (allServersDown) {
+        const allDownEmbed = new EmbedBuilder()
+          .setColor('#FF0000')
+          .setDescription('⚠️ All servers are down! ⚠️')
+          .setTimestamp();
+        await channel.send({ embeds: [allDownEmbed] });
+      } else {
+        // Send grouped messages for servers going up or down
+        if (serversUp.length > 0) {
+          const upMessage = `✅ ${serversUp.join(', ')} ${serversUp.length > 1 ? 'are' : 'is'} back up ✅`;
+          const upEmbed = new EmbedBuilder().setColor('#00FF00').setDescription(upMessage).setTimestamp();
+          await channel.send({ embeds: [upEmbed] });
+        }
+
+        if (serversDown.length > 0) {
+          const downMessage = `⚠️ ${serversDown.join(', ')} ${serversDown.length > 1 ? 'are' : 'is'} down! ⚠️`;
+          const downEmbed = new EmbedBuilder().setColor('#FF0000').setDescription(downMessage).setTimestamp();
+          await channel.send({ embeds: [downEmbed] });
+        }
       }
 
       // Send the full server status after the changes
