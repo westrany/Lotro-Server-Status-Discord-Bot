@@ -78,15 +78,60 @@ async function monitorServerStatuses(channel) {
   // Store previous statuses to compare with the current status
   const previousStatuses = await checkAllServers();
 
-  // Send initial server status update
+  // Grouped messages for the initial status update
+  const serversUp = [];
+  const serversDown = [];
+  let allServersUp = true;
+  let allServersDown = true;
+
+  for (const [serverName, status] of Object.entries(previousStatuses)) {
+    if (status === 'UP') {
+      serversUp.push(serverName);
+      allServersDown = false; // At least one server is up
+    } else if (status === 'DOWN') {
+      serversDown.push(serverName);
+      allServersUp = false; // At least one server is down
+    }
+  }
+
+  // Handle cases where all servers are up or down
+  if (allServersUp) {
+    const allUpEmbed = new EmbedBuilder()
+      .setColor('#00FF00')
+      .setDescription('🎉 All servers are up 🎉')
+      .setTimestamp();
+    await channel.send({ embeds: [allUpEmbed] });
+  } else if (allServersDown) {
+    const allDownEmbed = new EmbedBuilder()
+      .setColor('#FF0000')
+      .setDescription('⚠️ All servers are down! ⚠️')
+      .setTimestamp();
+    await channel.send({ embeds: [allDownEmbed] });
+  } else {
+    // Send grouped messages for servers going up or down
+    if (serversUp.length > 0) {
+      const upMessage = `✅ ${serversUp.join(', ')} ${serversUp.length > 1 ? 'are' : 'is'} up ✅`;
+      const upEmbed = new EmbedBuilder().setColor('#00FF00').setDescription(upMessage).setTimestamp();
+      await channel.send({ embeds: [upEmbed] });
+    }
+
+    if (serversDown.length > 0) {
+      const downMessage = `⚠️ ${serversDown.join(', ')} ${serversDown.length > 1 ? 'are' : 'is'} down! ⚠️`;
+      const downEmbed = new EmbedBuilder().setColor('#FF0000').setDescription(downMessage).setTimestamp();
+      await channel.send({ embeds: [downEmbed] });
+    }
+  }
+
+  // Send full server status after the initial check
   const fullStatusEmbed = createAllServerStatusEmbed(previousStatuses);
   await channel.send({ embeds: [fullStatusEmbed] });
 
+  // Now set up the interval for ongoing checks
   setInterval(async () => {
     const currentStatuses = await checkAllServers();
     const serversUp = [];
     const serversDown = [];
-    let hasStatusChanged = false;  // Flag to track if status has changed
+    let hasStatusChanged = false;
 
     // Compare current status with the previous ones
     for (const [serverName, status] of Object.entries(currentStatuses)) {
@@ -105,7 +150,6 @@ async function monitorServerStatuses(channel) {
 
     // Only send messages if the status has changed
     if (hasStatusChanged) {
-      // Handle cases where all servers are up or down
       const allServersUp = Object.values(currentStatuses).every(status => status === 'UP');
       const allServersDown = Object.values(currentStatuses).every(status => status === 'DOWN');
 
@@ -142,6 +186,7 @@ async function monitorServerStatuses(channel) {
     }
   }, checkInterval);
 }
+
 
 // Single interaction handler
 client.on('interactionCreate', async interaction => {
