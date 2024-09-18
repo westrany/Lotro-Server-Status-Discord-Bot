@@ -84,30 +84,46 @@ async function checkAllServers() {
     if (!interaction.isCommand()) return;
   
     if (interaction.commandName === 'status') {
-      const serverName = interaction.options.getString('server');
-      if (serverName) {
-        // Fetch specific server status
-        const serverStatuses = await checkAllServers();
-        const statusMessage = serverStatuses[serverName]
-          ? `${serverName}: ${serverStatuses[serverName]}`
-          : `Server "${serverName}" not found.`;
-        await interaction.reply(statusMessage);
-      } else {
-        // Fetch all server statuses
-        const serverStatuses = await checkAllServers();
-        let statusMessage = "Server Statuses:\n";
-        for (const [server, status] of Object.entries(serverStatuses)) {
-          statusMessage += `${server}: ${status}\n`;
+      try {
+        await interaction.deferReply();  // Defer reply immediately
+  
+        const serverName = interaction.options.getString('server');
+        let statusMessage;
+  
+        if (serverName) {
+          // Fetch specific server status
+          const serverStatuses = await checkAllServers();
+          statusMessage = serverStatuses[serverName]
+            ? `${serverName}: ${serverStatuses[serverName]}`
+            : `Server "${serverName}" not found.`;
+        } else {
+          // Fetch all server statuses
+          const serverStatuses = await checkAllServers();
+          statusMessage = "Server Statuses:\n";
+          for (const [server, status] of Object.entries(serverStatuses)) {
+            statusMessage += `${server}: ${status}\n`;
+          }
         }
-        await interaction.reply(statusMessage);
+  
+        await interaction.editReply(statusMessage);  // Edit deferred reply with status
+      } catch (error) {
+        console.error('Error while handling interaction:', error);
+        await interaction.editReply('There was an error processing your request.');
       }
     } else if (interaction.commandName === 'monitor') {
-      // Enable monitoring in the current channel
-      monitoringChannel = interaction.channel;
-      await interaction.reply('Server status monitoring enabled in this channel.');
+      try {
+        await interaction.deferReply();  // Defer reply immediately
   
-      // Start monitoring server statuses
-      monitorServerStatuses(interaction.channel);
+        // Set up monitoring and inform the user
+        monitoringChannel = interaction.channel;
+        await interaction.editReply('Server status monitoring enabled in this channel.');
+  
+        // Start monitoring server statuses
+        monitorServerStatuses(interaction.channel);
+      } catch (error) {
+        console.error('Error enabling monitor:', error);
+        await interaction.editReply('There was an error enabling the server status monitor.');
+      }
     }
   });
   
