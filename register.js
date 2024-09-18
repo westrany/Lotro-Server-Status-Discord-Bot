@@ -1,11 +1,12 @@
-const { commands } = require('./commands.js'); // Use require instead of import
-const fetch = require('node-fetch'); // Use require for node-fetch
+const { commands } = require('./commands.js'); // Keep using CommonJS for other modules
 
 /**
- * This file is meant to be run from the command line, and is not used by the
- * application server. It's allowed to use node.js primitives, and only needs
- * to be run once.
+ * Dynamically import node-fetch
  */
+async function fetchModule() {
+  const fetch = (await import('node-fetch')).default;
+  return fetch;
+}
 
 const token = process.env.DISCORD_TOKEN;
 const applicationId = process.env.DISCORD_APPLICATION_ID;
@@ -17,26 +18,20 @@ if (!applicationId) {
   throw new Error('The DISCORD_APPLICATION_ID environment variable is required.');
 }
 
-/**
- * Register all commands globally. This can take a few minutes, so ensure that
- * these are the commands you want.
- */
 async function registerGlobalCommands() {
   const url = `https://discord.com/api/v10/applications/${applicationId}/commands`;
-  await registerCommands(url);
+  const fetch = await fetchModule();
+  await registerCommands(url, fetch);
 }
 
-/**
- * Function to send the request to Discord API to register commands
- */
-async function registerCommands(url) {
+async function registerCommands(url, fetch) {
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bot ${token}`,
     },
     method: 'PUT',
-    body: JSON.stringify(commands),  // Register all commands from commands.js
+    body: JSON.stringify(commands),
   });
 
   if (response.ok) {
@@ -49,5 +44,4 @@ async function registerCommands(url) {
   return response;
 }
 
-// Call the function to register the global commands
 registerGlobalCommands();

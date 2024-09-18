@@ -14,5 +14,5 @@ const commands = [
     .setDescription('Start monitoring server statuses and post updates when they change')
 ];
 
-// Export commands
+// Export commands as JSON
 module.exports = commands.map(command => command.toJSON());
