@@ -1,6 +1,6 @@
+require('dotenv').config(); // Load environment variables from .env
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const axios = require('axios');
-const { token, clientId, guildId } = require('./config.json');
 
 // Initialize the Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -13,14 +13,15 @@ const commands = [
   },
 ];
 
-const rest = new REST({ version: '10' }).setToken(token);
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
+    // Use global command registration if bot is intended for multiple servers
     await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
+      Routes.applicationCommands(process.env.DISCORD_APP_ID),
       { body: commands }
     );
 
@@ -85,4 +86,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(token);
+client.login(process.env.DISCORD_TOKEN);
