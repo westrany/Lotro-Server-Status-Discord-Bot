@@ -3,10 +3,19 @@ const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const axios = require('axios');
 const commands = require('./commands.js'); // Import commands
 
+// Emojis to be used for singular server status enquiries
+const happyEmojis = ['😊', '😇', '💚', '🧙🏻‍♂️'];
+const sadEmojis = ['😭', '😡', '😈', '🤬'];
+
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 let monitoringChannel = null;  // This will store the channel ID where monitoring is enabled
 let previousServerStatuses = {};  // Store previous statuses to compare changes
+
+// Function to get random emoji
+function getRandomEmoji(emojis) {
+  return emojis[Math.floor(Math.random() * emojis.length)];
+}
 
 // Register the commands on startup
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -45,99 +54,109 @@ const serverUrls = {
 
 // Function to check all server statuses
 async function checkAllServers() {
-    const serverStatuses = {};
-  
-    for (const [serverName, url] of Object.entries(serverUrls)) {
-      try {
-        const response = await axios.get(url);
-        const isUp = response.data.includes('AngmarStd');
-        serverStatuses[serverName] = isUp ? 'UP' : 'DOWN';
-      } catch (error) {
-        console.error(`Error checking ${serverName}: ${error.message}`);
-        serverStatuses[serverName] = 'ERROR';
+  const serverStatuses = {};
+
+  for (const [serverName, url] of Object.entries(serverUrls)) {
+    try {
+      const response = await axios.get(url);
+      const isUp = response.data.includes('AngmarStd');
+      serverStatuses[serverName] = isUp ? 'UP' : 'DOWN';
+    } catch (error) {
+      console.error(`Error checking ${serverName}: ${error.message}`);
+      serverStatuses[serverName] = 'ERROR';
+    }
+  }
+
+  return serverStatuses;
+}
+
+// Function to monitor server statuses
+async function monitorServerStatuses(channel) {
+  setInterval(async () => {
+    const currentStatuses = await checkAllServers();
+
+    // Compare current status with the previous ones
+    for (const [serverName, status] of Object.entries(currentStatuses)) {
+      if (previousServerStatuses[serverName] && previousServerStatuses[serverName] !== status) {
+        const upMessage = `🎉 ${serverName} is back up 🎉`;
+        const downMessage = `⚠️ ${serverName} is down! ⚠️`;
+        await channel.send(status === 'UP' ? upMessage : downMessage);
       }
     }
-  
-    return serverStatuses;
-  }
-  
-  // Function to monitor server statuses
-  async function monitorServerStatuses(channel) {
-    setInterval(async () => {
-      const currentStatuses = await checkAllServers();
-  
-      // Compare current status with the previous ones
-      for (const [serverName, status] of Object.entries(currentStatuses)) {
-        if (previousServerStatuses[serverName] && previousServerStatuses[serverName] !== status) {
-          // If the status has changed, post an update in the channel
-          await channel.send(`Server ${serverName} is now ${status}`);
-        }
-      }
-  
-      // Update the previous statuses
-      previousServerStatuses = currentStatuses;
-    }, 60000);  // Check every 60 seconds
-  }
-  
+
+    // Update and display the full status table
+    let statusTable = "**SERVER NAME | STATUS**\n";
+    for (const [server, status] of Object.entries(currentStatuses)) {
+      const statusIcon = status === 'UP' ? '✅' : '⛔';
+      statusTable += `${server.padEnd(20)} | ${statusIcon}\n`;
+    }
+    await channel.send(statusTable);
+
+    // Update the previous statuses
+    previousServerStatuses = currentStatuses;
+  }, 60000);  // Check every 60 seconds
+}
+
 // Single interaction handler
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
-  
-    if (interaction.commandName === 'status') {
-      try {
-        await interaction.deferReply();  // Defer reply immediately
-  
-        const serverName = interaction.options.getString('server');
-        let statusMessage;
-  
-        if (serverName) {
-          // Normalize server name to lowercase for case-insensitive matching
-          const normalizedServerName = serverName.toLowerCase();
-  
-          const serverStatuses = await checkAllServers();  // Fetch all server statuses
-  
-          // Convert server names to lowercase for comparison
-          const serverKey = Object.keys(serverStatuses).find(
-            key => key.toLowerCase() === normalizedServerName
-          );
-  
-          if (serverKey) {
-            // If server name is found, return the status
-            statusMessage = `${serverKey}: ${serverStatuses[serverKey]}`;
-          } else {
-            // Server name not found
-            statusMessage = `Server "${serverName}" not found.`;
-          }
+  if (!interaction.isCommand()) return;
+
+  if (interaction.commandName === 'status') {
+    try {
+      await interaction.deferReply();  // Defer reply immediately
+
+      const serverName = interaction.options.getString('server');
+      let statusMessage;
+
+      if (serverName) {
+        // Normalize server name to lowercase for case-insensitive matching
+        const normalizedServerName = serverName.toLowerCase();
+
+        const serverStatuses = await checkAllServers();  // Fetch all server statuses
+
+        // Convert server names to lowercase for comparison
+        const serverKey = Object.keys(serverStatuses).find(
+          key => key.toLowerCase() === normalizedServerName
+        );
+
+        if (serverKey) {
+          // If server name is found, return the status with emoji
+          const statusEmoji = serverStatuses[serverKey] === 'UP' ? getRandomEmoji(happyEmojis) : getRandomEmoji(sadEmojis);
+          statusMessage = `${serverKey} is ${serverStatuses[serverKey]} ${statusEmoji}`;
         } else {
-          // Fetch all server statuses
-          const serverStatuses = await checkAllServers();
-          statusMessage = "Server Statuses:\n";
-          for (const [server, status] of Object.entries(serverStatuses)) {
-            statusMessage += `${server}: ${status}\n`;
-          }
+          // Server name not found
+          statusMessage = `Server "${serverName}" not found.`;
         }
-  
-        await interaction.editReply(statusMessage);  // Edit deferred reply with status
-      } catch (error) {
-        console.error('Error while handling interaction:', error);
-        await interaction.editReply('There was an error processing your request.');
+      } else {
+        // Fetch all server statuses and display as a table
+        const serverStatuses = await checkAllServers();
+        statusMessage = "**SERVER NAME | STATUS**\n";
+        for (const [server, status] of Object.entries(serverStatuses)) {
+          const statusIcon = status === 'UP' ? '✅' : '⛔';
+          statusMessage += `${server.padEnd(20)} | ${statusIcon}\n`;
+        }
       }
-    } else if (interaction.commandName === 'monitor') {
-      try {
-        await interaction.deferReply();  // Defer reply immediately
-  
-        // Set up monitoring and inform the user
-        monitoringChannel = interaction.channel;
-        await interaction.editReply('Server status monitoring enabled in this channel.');
-  
-        // Start monitoring server statuses
-        monitorServerStatuses(interaction.channel);
-      } catch (error) {
-        console.error('Error enabling monitor:', error);
-        await interaction.editReply('There was an error enabling the server status monitor.');
-      }
+
+      await interaction.editReply(statusMessage);  // Edit deferred reply with status
+    } catch (error) {
+      console.error('Error while handling interaction:', error);
+      await interaction.editReply('There was an error processing your request.');
     }
-  });
-  
-  
-  client.login(process.env.DISCORD_TOKEN);
+  } else if (interaction.commandName === 'monitor') {
+    try {
+      await interaction.deferReply();  // Defer reply immediately
+
+      // Set up monitoring and inform the user
+      monitoringChannel = interaction.channel;
+      await interaction.editReply('Server status monitoring enabled in this channel.');
+
+      // Start monitoring server statuses
+      monitorServerStatuses(interaction.channel);
+    } catch (error) {
+      console.error('Error enabling monitor:', error);
+      await interaction.editReply('There was an error enabling the server status monitor.');
+    }
+  }
+});
+
+client.login(process.env.DISCORD_TOKEN);
