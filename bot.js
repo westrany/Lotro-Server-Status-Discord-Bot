@@ -1,33 +1,25 @@
 require('dotenv').config(); // Load environment variables from .env
 const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
 const axios = require('axios');
+const commands = require('./commands.js'); // Import commands
 
-// Initialize the Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// Register the /status command
-const commands = [
-  {
-    name: 'status',
-    description: 'Check the status of LOTRO servers',
-  },
-];
-
+// Register the commands on startup
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
-    // Use global command registration if bot is intended for multiple servers
     await rest.put(
       Routes.applicationCommands(process.env.DISCORD_APP_ID),
-      { body: commands }
+      { body: commands }  // Register the commands from commands.js
     );
 
     console.log('Successfully reloaded application (/) commands.');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering commands:', error);
   }
 })();
 
@@ -72,27 +64,27 @@ async function checkServers() {
   };
 }
 
-// Respond to the slash command
+// Single interaction handler
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
-  
-    if (interaction.commandName === 'status') {
-      try {
-        await interaction.deferReply();  // Defer to give time to fetch the status
-  
-        // Fetch the server statuses
-        const { worldStatus, serverStatuses } = await checkServers();
-        let statusMessage = `World Status: ${worldStatus}\n`;
-        serverStatuses.forEach(({ serverName, status }) => {
-          statusMessage += `${serverName}: ${status}\n`;
-        });
-  
-        await interaction.editReply(statusMessage);  // Edit the reply with the status message
-      } catch (error) {
-        console.error('Error while handling interaction:', error);
-        await interaction.editReply('There was an error processing your request.');
-      }
+  if (!interaction.isCommand()) return;
+
+  if (interaction.commandName === 'status') {
+    try {
+      await interaction.deferReply();  // Defer to give time to fetch the status
+
+      // Fetch the server statuses
+      const { worldStatus, serverStatuses } = await checkServers();
+      let statusMessage = `World Status: ${worldStatus}\n`;
+      serverStatuses.forEach(({ serverName, status }) => {
+        statusMessage += `${serverName}: ${status}\n`;
+      });
+
+      await interaction.editReply(statusMessage);  // Edit the reply with the status message
+    } catch (error) {
+      console.error('Error while handling interaction:', error);
+      await interaction.editReply('There was an error processing your request.');
     }
-  });
-  
-  
+  }
+});
+
+client.login(process.env.DISCORD_TOKEN);
