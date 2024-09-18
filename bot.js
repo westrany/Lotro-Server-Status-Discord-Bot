@@ -5,7 +5,7 @@ const axios = require('axios');
 // Create a new Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-const WSDL_URL = 'https://gls.lotro.com/GLS.DataCenterServer/Service.asmx?WSDL';
+// const WSDL_URL = 'https://gls.lotro.com/GLS.DataCenterServer/Service.asmx?WSDL';
 const serverUrls = {
     'Angmar': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.73',
     'Arkenstone': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.144.103',
