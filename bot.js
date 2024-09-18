@@ -5,6 +5,9 @@ const commands = require('./commands.js'); // Import commands
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+let monitoringChannel = null;  // This will store the channel ID where monitoring is enabled
+let previousServerStatuses = {};  // Store previous statuses to compare changes
+
 // Register the commands on startup
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
@@ -40,68 +43,72 @@ const serverUrls = {
   'Treebeard': 'http://gls.lotro.com/GLS.DataCenterServer/StatusServer.aspx?s=10.192.145.137',
 };
 
-// Check server status
-async function checkServerStatus(serverName) {
-  const url = serverUrls[serverName];
-  if (!url) return `Server "${serverName}" not found.`;
-
-  try {
-    const response = await axios.get(url);
-    const isUp = response.data.includes('AngmarStd');
-    return `${serverName}: ${isUp ? 'UP' : 'DOWN'}`;
-  } catch (error) {
-    console.error(`Error checking ${serverName}: ${error.message}`);
-    return `${serverName}: ERROR`;
-  }
-}
-
-// Check all servers
+// Function to check all server statuses
 async function checkAllServers() {
-  let serversUp = 0;
-  const totalServers = Object.keys(serverUrls).length;
-  const serverStatuses = [];
-
-  for (const [serverName, url] of Object.entries(serverUrls)) {
-    try {
-      const response = await axios.get(url);
-      const isUp = response.data.includes('AngmarStd');
-      serverStatuses.push(`${serverName}: ${isUp ? 'UP' : 'DOWN'}`);
-      if (isUp) serversUp++;
-    } catch (error) {
-      console.error(`Error checking ${serverName}: ${error.message}`);
-      serverStatuses.push(`${serverName}: ERROR`);
-    }
-  }
-
-  const worldStatus = serversUp >= totalServers / 2 ? "World is UP" : "World is DOWN";
-  return `World Status: ${worldStatus}\n` + serverStatuses.join('\n');
-}
-
-// Single interaction handler
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
-
-  if (interaction.commandName === 'status') {
-    try {
-      await interaction.deferReply();  // Defer to give time to fetch the status
-
-      const serverName = interaction.options.getString('server');  // Get the server name from the user input
-      let statusMessage;
-
-      if (serverName) {
-        // Fetch the status for a specific server
-        statusMessage = await checkServerStatus(serverName);
-      } else {
-        // Fetch the status for all servers
-        statusMessage = await checkAllServers();
+    const serverStatuses = {};
+  
+    for (const [serverName, url] of Object.entries(serverUrls)) {
+      try {
+        const response = await axios.get(url);
+        const isUp = response.data.includes('AngmarStd');
+        serverStatuses[serverName] = isUp ? 'UP' : 'DOWN';
+      } catch (error) {
+        console.error(`Error checking ${serverName}: ${error.message}`);
+        serverStatuses[serverName] = 'ERROR';
       }
-
-      await interaction.editReply(statusMessage);  // Edit the reply with the status message
-    } catch (error) {
-      console.error('Error while handling interaction:', error);
-      await interaction.editReply('There was an error processing your request.');
     }
+  
+    return serverStatuses;
   }
-});
-
-client.login(process.env.DISCORD_TOKEN);
+  
+  // Function to monitor server statuses
+  async function monitorServerStatuses(channel) {
+    setInterval(async () => {
+      const currentStatuses = await checkAllServers();
+  
+      // Compare current status with the previous ones
+      for (const [serverName, status] of Object.entries(currentStatuses)) {
+        if (previousServerStatuses[serverName] && previousServerStatuses[serverName] !== status) {
+          // If the status has changed, post an update in the channel
+          await channel.send(`Server ${serverName} is now ${status}`);
+        }
+      }
+  
+      // Update the previous statuses
+      previousServerStatuses = currentStatuses;
+    }, 60000);  // Check every 60 seconds
+  }
+  
+  // Single interaction handler
+  client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+  
+    if (interaction.commandName === 'status') {
+      const serverName = interaction.options.getString('server');
+      if (serverName) {
+        // Fetch specific server status
+        const serverStatuses = await checkAllServers();
+        const statusMessage = serverStatuses[serverName]
+          ? `${serverName}: ${serverStatuses[serverName]}`
+          : `Server "${serverName}" not found.`;
+        await interaction.reply(statusMessage);
+      } else {
+        // Fetch all server statuses
+        const serverStatuses = await checkAllServers();
+        let statusMessage = "Server Statuses:\n";
+        for (const [server, status] of Object.entries(serverStatuses)) {
+          statusMessage += `${server}: ${status}\n`;
+        }
+        await interaction.reply(statusMessage);
+      }
+    } else if (interaction.commandName === 'monitor') {
+      // Enable monitoring in the current channel
+      monitoringChannel = interaction.channel;
+      await interaction.reply('Server status monitoring enabled in this channel.');
+  
+      // Start monitoring server statuses
+      monitorServerStatuses(interaction.channel);
+    }
+  });
+  
+  client.login(process.env.DISCORD_TOKEN);
