@@ -112,107 +112,34 @@ client.on('interactionCreate', async interaction => {
       } else {
         // Fetch all server statuses and display in an embed
         const serverStatuses = await checkAllServers();
-        const embed = createAllServerStatusEmbed(serverStatuses);
-        await interaction.editReply({ embeds: [embed] });
+        let message, color;
+
+        const allServersUp = Object.values(serverStatuses).every(status => status === 'UP');
+        const allServersDown = Object.values(serverStatuses).every(status => status === 'DOWN');
+
+        if (allServersUp) {
+          message = '🎉 All servers are up! 🎉';
+          color = '#00FF00';
+        } else if (allServersDown) {
+          message = '⚠️ All servers are down! ⚠️';
+          color = '#FF0000';
+        } else { 
+          const downServers = Object.keys(serverStatuses).filter(server => serverStatuses[server] === 'DOWN');
+          message = `⚠️ Server ${downServers.join('/') || 'names'} ${downServers.length > 1 ? 'are' : 'is'} down! ⚠️`;
+          color = '#FF0000';
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor(color)
+          .setDescription(message);
+
+        await interaction.editReply({ embeds: [embed, createAllServerStatusEmbed(serverStatuses)] });
       }
     } catch (error) {
       console.error('Error while handling interaction:', error);
       await interaction.editReply('There was an error processing your request.');
     }
-  } else if (interaction.commandName === 'monitor') {
-    try {
-      // Send a reply indicating monitoring is enabled
-      const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setDescription('Server status monitoring enabled in this channel.')
-        .setTimestamp();
-
-      monitoringChannel = interaction.channel;
-      await interaction.reply({ embeds: [embed] });  // Reply once, no need to defer
-
-      // Start monitoring server statuses (this will run separately from the interaction response)
-      monitorServerStatuses(interaction.channel);  
-    } catch (error) {
-      console.error('Error enabling monitor:', error);
-      if (!interaction.replied) {
-        await interaction.reply('There was an error enabling the server status monitor.');
-      } else {
-        await interaction.followUp('There was an error enabling the server status monitor.');
-      }
-    }
   }
 });
-
-// Function to monitor server statuses and send updates
-async function monitorServerStatuses(channel) {
-  const checkInterval = 60000; // Check every 60 seconds
-
-  // Store previous statuses to compare with the current status
-  const previousStatuses = await checkAllServers();
-
-  // Send initial server status update
-  const fullStatusEmbed = createAllServerStatusEmbed(previousStatuses);
-  await channel.send({ embeds: [fullStatusEmbed] });
-
-  setInterval(async () => {
-    const currentStatuses = await checkAllServers();
-    const serversUp = [];
-    const serversDown = [];
-    let hasStatusChanged = false;  // Flag to track if status has changed
-
-    // Compare current status with the previous ones
-    for (const [serverName, status] of Object.entries(currentStatuses)) {
-      const previousStatus = previousStatuses[serverName];
-
-      if (status !== previousStatus) {
-        hasStatusChanged = true;
-        if (status === 'UP') {
-          serversUp.push(serverName);
-        } else if (status === 'DOWN') {
-          serversDown.push(serverName);
-        }
-        previousStatuses[serverName] = status; // Update the stored status
-      }
-    }
-
-    // Only send messages if the status has changed
-    if (hasStatusChanged) {
-      // Handle cases where all servers are up or down
-      const allServersUp = Object.values(currentStatuses).every(status => status === 'UP');
-      const allServersDown = Object.values(currentStatuses).every(status => status === 'DOWN');
-
-      if (allServersUp) {
-        const allUpEmbed = new EmbedBuilder()
-          .setColor('#00FF00')
-          .setDescription('🎉 All servers are up 🎉')
-          .setTimestamp();
-        await channel.send({ embeds: [allUpEmbed] });
-      } else if (allServersDown) {
-        const allDownEmbed = new EmbedBuilder()
-          .setColor('#FF0000')
-          .setDescription('⚠️ All servers are down! ⚠️')
-          .setTimestamp();
-        await channel.send({ embeds: [allDownEmbed] });
-      } else {
-        // Send grouped messages for servers going up or down
-        if (serversUp.length > 0) {
-          const upMessage = `✅ ${serversUp.join(', ')} ${serversUp.length > 1 ? 'are' : 'is'} back up ✅`;
-          const upEmbed = new EmbedBuilder().setColor('#00FF00').setDescription(upMessage).setTimestamp();
-          await channel.send({ embeds: [upEmbed] });
-        }
-
-        if (serversDown.length > 0) {
-          const downMessage = `⚠️ ${serversDown.join(', ')} ${serversDown.length > 1 ? 'are' : 'is'} down! ⚠️`;
-          const downEmbed = new EmbedBuilder().setColor('#FF0000').setDescription(downMessage).setTimestamp();
-          await channel.send({ embeds: [downEmbed] });
-        }
-      }
-
-      // Send the full server status after the changes
-      const fullStatusEmbed = createAllServerStatusEmbed(currentStatuses);
-      await channel.send({ embeds: [fullStatusEmbed] });
-    }
-  }, checkInterval);
-}
 
 client.login(token);  // Use the token to log in the bot
