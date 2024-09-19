@@ -134,7 +134,11 @@ client.on('interactionCreate', async interaction => {
       monitorServerStatuses(interaction.channel);  
     } catch (error) {
       console.error('Error enabling monitor:', error);
-      await interaction.reply('There was an error enabling the server status monitor.');
+      if (!interaction.replied) {
+        await interaction.reply('There was an error enabling the server status monitor.');
+      } else {
+        await interaction.followUp('There was an error enabling the server status monitor.');
+      }
     }
   }
 });
