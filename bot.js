@@ -119,27 +119,6 @@ client.on('interactionCreate', async interaction => {
       console.error('Error while handling interaction:', error);
       await interaction.editReply('There was an error processing your request.');
     }
-  } else if (interaction.commandName === 'monitor') {
-    try {
-      // Send a reply indicating monitoring is enabled
-      const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setDescription('Server status monitoring enabled in this channel.')
-        .setTimestamp();
-
-      monitoringChannel = interaction.channel;
-      await interaction.reply({ embeds: [embed] });  // Reply once, no need to defer
-
-      // Start monitoring server statuses (this will run separately from the interaction response)
-      monitorServerStatuses(interaction.channel);  
-    } catch (error) {
-      console.error('Error enabling monitor:', error);
-      if (!interaction.replied) {
-        await interaction.reply('There was an error enabling the server status monitor.');
-      } else {
-        await interaction.followUp('There was an error enabling the server status monitor.');
-      }
-    }
   }
 });
 
