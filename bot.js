@@ -78,6 +78,67 @@ async function checkAllServers() {
   return serverStatuses;
 }
 
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
+
+  if (interaction.commandName === 'status') {
+    try {
+      await interaction.deferReply();  // Defer reply immediately
+
+      const serverName = interaction.options.getString('server');
+      let statusMessage;
+
+      if (serverName) {
+        // Normalize server name to lowercase for case-insensitive matching
+        const normalizedServerName = serverName.toLowerCase();
+
+        const serverStatuses = await checkAllServers();  // Fetch all server statuses
+
+        // Convert server names to lowercase for comparison
+        const serverKey = Object.keys(serverStatuses).find(
+          key => key.toLowerCase() === normalizedServerName
+        );
+
+        if (serverKey) {
+          // If server name is found, return the status with emoji using an embed
+          const statusEmoji = serverStatuses[serverKey] === 'UP' ? getRandomEmoji(happyEmojis) : getRandomEmoji(sadEmojis);
+          const embed = createServerStatusEmbed(serverKey, serverStatuses[serverKey], statusEmoji);
+          await interaction.editReply({ embeds: [embed] });
+        } else {
+          // Server name not found
+          statusMessage = `Server "${serverName}" not found.`;
+          await interaction.editReply(statusMessage);  // Send a simple reply if server not found
+        }
+      } else {
+        // Fetch all server statuses and display in an embed
+        const serverStatuses = await checkAllServers();
+        const embed = createAllServerStatusEmbed(serverStatuses);
+        await interaction.editReply({ embeds: [embed] });
+      }
+    } catch (error) {
+      console.error('Error while handling interaction:', error);
+      await interaction.editReply('There was an error processing your request.');
+    }
+  } else if (interaction.commandName === 'monitor') {
+    try {
+      // Send a reply indicating monitoring is enabled
+      const embed = new EmbedBuilder()
+        .setColor('#0099ff')
+        .setDescription('Server status monitoring enabled in this channel.')
+        .setTimestamp();
+
+      monitoringChannel = interaction.channel;
+      await interaction.reply({ embeds: [embed] });  // Reply once, no need to defer
+
+      // Start monitoring server statuses (this will run separately from the interaction response)
+      monitorServerStatuses(interaction.channel);  
+    } catch (error) {
+      console.error('Error enabling monitor:', error);
+      await interaction.reply('There was an error enabling the server status monitor.');
+    }
+  }
+});
+
 // Function to monitor server statuses and send updates
 async function monitorServerStatuses(channel) {
   const checkInterval = 60000; // Check every 60 seconds
@@ -149,67 +210,5 @@ async function monitorServerStatuses(channel) {
     }
   }, checkInterval);
 }
-
-// Single interaction handler
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
-
-  if (interaction.commandName === 'status') {
-    try {
-      await interaction.deferReply();  // Defer reply immediately
-
-      const serverName = interaction.options.getString('server');
-      let statusMessage;
-
-      if (serverName) {
-        // Normalize server name to lowercase for case-insensitive matching
-        const normalizedServerName = serverName.toLowerCase();
-
-        const serverStatuses = await checkAllServers();  // Fetch all server statuses
-
-        // Convert server names to lowercase for comparison
-        const serverKey = Object.keys(serverStatuses).find(
-          key => key.toLowerCase() === normalizedServerName
-        );
-
-        if (serverKey) {
-          // If server name is found, return the status with emoji using an embed
-          const statusEmoji = serverStatuses[serverKey] === 'UP' ? getRandomEmoji(happyEmojis) : getRandomEmoji(sadEmojis);
-          const embed = createServerStatusEmbed(serverKey, serverStatuses[serverKey], statusEmoji);
-          await interaction.editReply({ embeds: [embed] });
-        } else {
-          // Server name not found
-          statusMessage = `Server "${serverName}" not found.`;
-          await interaction.editReply(statusMessage);  // Send a simple reply if server not found
-        }
-      } else {
-        // Fetch all server statuses and display in an embed
-        const serverStatuses = await checkAllServers();
-        const embed = createAllServerStatusEmbed(serverStatuses);
-        await interaction.editReply({ embeds: [embed] });
-      }
-    } catch (error) {
-      console.error('Error while handling interaction:', error);
-      await interaction.editReply('There was an error processing your request.');
-    }
-  } else if (interaction.commandName === 'monitor') {
-    try {
-      await interaction.deferReply();  // Defer reply immediately
-
-      // Send embed message for monitoring enabled
-      const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setDescription('Server status monitoring enabled in this channel.')
-        .setTimestamp();
-
-      monitoringChannel = interaction.channel;
-      monitorServerStatuses(interaction.channel);  // Start monitoring server statuses
-      await interaction.editReply({ embeds: [embed] });
-    } catch (error) {
-      console.error('Error enabling monitor:', error);
-      await interaction.editReply('There was an error enabling the server status monitor.');
-    }
-  }
-});
 
 client.login(token);  // Use the token to log in the bot
