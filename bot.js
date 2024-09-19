@@ -26,7 +26,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     console.log('Started refreshing application (/) commands.');
 
     await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_APP_ID),
+      Routes.applicationCommands(process.env.DISCORD_APPLICATION_ID), // Use the correct environment variable here
       { body: commands }  // Register the commands from commands.js
     );
 
