@@ -61,7 +61,7 @@ To get started, you’ll need:
 Create a .env file in the root of the project and add the following environment variables:  
 ```
 DISCORD_TOKEN=your_discord_bot_token
-DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_ID=your_discord_application_id
 DISCORD_APPLICATION_ID=your_discord_application_id
 ```
 
