@@ -2,7 +2,7 @@
 
 A Discord bot built to monitor and provide updates on the server statuses for the game Lord of the Rings Online (LOTRO). The bot allows users to check server statuses, monitor server changes, and receive real-time notifications when server statuses change.  
 
-Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?client_id=1285998173294301234&permissions=2147567680&integration_type=0&scope=bot+applications.commands)!
+🔗🤖 Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?client_id=1285998173294301234&permissions=2147567680&integration_type=0&scope=bot+applications.commands)! 🤖🔗
 
 
 ![image](https://github.com/user-attachments/assets/a984e6b5-5e71-4fe7-b836-e99d9004961f)
