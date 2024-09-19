@@ -85,7 +85,7 @@ async function monitorServerStatuses(channel) {
   // Store previous statuses to compare with the current status
   const previousStatuses = await checkAllServers();
 
-  // Send initial server status update immediately
+  // Send initial server status update
   const fullStatusEmbed = createAllServerStatusEmbed(previousStatuses);
   await channel.send({ embeds: [fullStatusEmbed] });
 
@@ -93,7 +93,7 @@ async function monitorServerStatuses(channel) {
     const currentStatuses = await checkAllServers();
     const serversUp = [];
     const serversDown = [];
-    let hasStatusChanged = false;
+    let hasStatusChanged = false;  // Flag to track if status has changed
 
     // Compare current status with the previous ones
     for (const [serverName, status] of Object.entries(currentStatuses)) {
@@ -112,6 +112,7 @@ async function monitorServerStatuses(channel) {
 
     // Only send messages if the status has changed
     if (hasStatusChanged) {
+      // Handle cases where all servers are up or down
       const allServersUp = Object.values(currentStatuses).every(status => status === 'UP');
       const allServersDown = Object.values(currentStatuses).every(status => status === 'DOWN');
 
@@ -211,4 +212,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(token);  // Use the token to log in the bot
