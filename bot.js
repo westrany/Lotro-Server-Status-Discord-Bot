@@ -112,8 +112,28 @@ client.on('interactionCreate', async interaction => {
       } else {
         // Fetch all server statuses and display in an embed
         const serverStatuses = await checkAllServers();
-        const embed = createAllServerStatusEmbed(serverStatuses);
-        await interaction.editReply({ embeds: [embed] });
+        let message, color;
+
+        const allServersUp = Object.values(serverStatuses).every(status => status === 'UP');
+        const allServersDown = Object.values(serverStatuses).every(status => status === 'DOWN');
+
+        if (allServersUp) {
+          message = '🎉 All servers are up! 🎉';
+          color = '#00FF00';
+        } else if (allServersDown) {
+          message = '⚠️ All servers are down! ⚠️';
+          color = '#FF0000';
+        } else { 
+          const downServers = Object.keys(serverStatuses).filter(server => serverStatuses[server] === 'DOWN');
+          message = `⚠️ Server ${downServers.join('/') || 'names'} ${downServers.length > 1 ? 'are' : 'is'} down! ⚠️`;
+          color = '#FF0000';
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor(color)
+          .setDescription(message);
+
+        await interaction.editReply({ embeds: [embed, createAllServerStatusEmbed(serverStatuses)] });
       }
     } catch (error) {
       console.error('Error while handling interaction:', error);
