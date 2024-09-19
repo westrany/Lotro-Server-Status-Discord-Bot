@@ -1,5 +1,12 @@
 require('dotenv').config(); // Load environment variables from .env
 const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
+
+const token = process.env.DISCORD_TOKEN; // Fetch the token from environment variables 
+
+if (!token) {
+  throw new Error('The DISCORD_TOKEN environment variable is required.');
+}
+
 const axios = require('axios');
 const commands = require('./commands.js'); // Import commands
 const { createServerStatusEmbed, createAllServerStatusEmbed } = require('./embeds.js'); // Import embed functions
