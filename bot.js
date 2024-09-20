@@ -18,7 +18,21 @@ const { createServerStatusEmbed, createAllServerStatusEmbed } = require('./embed
 const happyEmojis = ['😊', '😇', '💚', '🧙🏻‍♂️'];
 const sadEmojis = ['😭', '😡', '😈', '🤬'];
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Specify intents and presence
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,  // Include this if your bot listens to messages
+    GatewayIntentBits.MessageContent  // Needed for message content access
+  ],
+  presence: {
+    status: 'online',
+    activities: [{
+      name: '/help',  // Adjust as needed
+      type: 'LISTENING'  // Activity type
+    }]
+  }
+});
 
 let monitoringChannel = null;  // This will store the channel ID where monitoring is enabled
 let previousServerStatuses = {};  // Store previous statuses to compare changes
