@@ -1,3 +1,6 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);  // Google's DNS
+
 require('dotenv').config(); // Load environment variables from .env
 const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
 
