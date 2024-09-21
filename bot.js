@@ -36,6 +36,7 @@ const client = new Client({
 
 let monitoringChannel = null;  // This will store the channel ID where monitoring is enabled
 let previousServerStatuses = {};  // Store previous statuses to compare changes
+let monitoringInterval = null;  // To store the interval ID for clearing it later
 
 // Function to get random emoji
 function getRandomEmoji(emojis) {
@@ -140,7 +141,7 @@ client.on('interactionCreate', async interaction => {
         } else if (allServersDown) {
           message = '⚠️ All servers are down! ⚠️';
           color = '#FF0000';
-        } else { 
+        } else {
           const downServers = Object.keys(serverStatuses).filter(server => serverStatuses[server] === 'DOWN');
           message = `⚠️ Server ${downServers.join('/') || 'names'} ${downServers.length > 1 ? 'are' : 'is'} down! ⚠️`;
           color = '#FF0000';
@@ -162,13 +163,13 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'monitor') {
     // Check if monitor is already enabled in this or another channel
     if (monitoringChannel) {
-      return interaction.reply('Monitoring is already enabled in <#${monitoringChannel}>. Please disable it there first.')
+      return interaction.reply(`Monitoring is already enabled in <#${monitoringChannel}>. Please disable it there first.`);
     }
 
     // Set channel where command was used as the monitoring channel
     monitoringChannel = interaction.channel.id;
 
-    //Immediatly check and send current server statuses
+    // Immediately check and send current server statuses
     const serverStatuses = await checkAllServers();  // This function checks all server statuses
     const allServerEmbed = createAllServerStatusEmbed(serverStatuses);
     await interaction.reply({ embeds: [allServerEmbed] });
@@ -177,7 +178,7 @@ client.on('interactionCreate', async interaction => {
     monitoringInterval = setInterval(async () => {
       const currentStatuses = await checkAllServers();
 
-      //Compare current status with previous status
+      // Compare current status with previous status
       if (JSON.stringify(currentStatuses) !== JSON.stringify(previousServerStatuses)) {
         // If status has changed, send update
         const updatedEmbed = createAllServerStatusEmbed(currentStatuses);
@@ -189,10 +190,23 @@ client.on('interactionCreate', async interaction => {
 
       // Update previous server statuses
       previousServerStatuses = currentStatuses;
-    }, 60000);    // 60 seconds interval
+    }, 60000);  // 60 seconds interval
 
     await interaction.followUp('Monitoring enabled! I will update here whenever server statuses change.');
   }
-});
+
+  // Stop monitoring logic
+  if (interaction.commandName === 'stopmonitor') {
+    if (!monitoringChannel) {
+      return interaction.reply('Monitoring is not currently enabled.');
+    }
+
+    clearInterval(monitoringInterval);  // Stop the monitoring interval
+    monitoringChannel = null;  // Reset the monitoring channel
+    previousServerStatuses = {};  // Reset the previous statuses
+    await interaction.reply('Monitoring disabled.');
+  }
+});  // <-- Correctly close the event handler here
 
 client.login(token);  // Use the token to log in the bot
+
