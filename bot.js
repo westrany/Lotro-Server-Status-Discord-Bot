@@ -163,16 +163,26 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'monitor') {
     // Check if monitor is already enabled in this or another channel
     if (monitoringChannel) {
-      return interaction.reply(`Monitoring is already enabled in <#${monitoringChannel}>. Please disable it there first.`);
+      const alreadyEnabledEmbed = new EmbedBuilder()
+        .setColor('#FFA500')
+        .setDescription(`Monitoring is already enabled in <#${monitoringChannel}>. Please disable it there first.`);
+      return interaction.reply({ embeds: [alreadyEnabledEmbed] });
     }
 
     // Set channel where command was used as the monitoring channel
     monitoringChannel = interaction.channel.id;
 
+    // Send the "Monitoring enabled" message as an embed
+    const monitoringEmbed = new EmbedBuilder()
+      .setColor('#00FF00')
+      .setDescription('Monitoring enabled! I will update here whenever server statuses change.');
+
+    await interaction.reply({ embeds: [monitoringEmbed] });
+
     // Immediately check and send current server statuses
     const serverStatuses = await checkAllServers();  // This function checks all server statuses
     const allServerEmbed = createAllServerStatusEmbed(serverStatuses);
-    await interaction.reply({ embeds: [allServerEmbed] });
+    await interaction.followUp({ embeds: [allServerEmbed] });
 
     // Begin monitoring server statuses every 60 seconds
     monitoringInterval = setInterval(async () => {
@@ -186,27 +196,32 @@ client.on('interactionCreate', async interaction => {
         if (channel) {
           await channel.send({ embeds: [updatedEmbed] });
         }
+        // Update previous server statuses only if changes occurred
+        previousServerStatuses = currentStatuses;
       }
-
-      // Update previous server statuses
-      previousServerStatuses = currentStatuses;
     }, 60000);  // 60 seconds interval
-
-    await interaction.followUp('Monitoring enabled! I will update here whenever server statuses change.');
   }
 
   // Stop monitoring logic
   if (interaction.commandName === 'stopmonitor') {
     if (!monitoringChannel) {
-      return interaction.reply('Monitoring is not currently enabled.');
+      const notEnabledEmbed = new EmbedBuilder()
+        .setColor('#FF0000')
+        .setDescription('Monitoring is not currently enabled.');
+      return interaction.reply({ embeds: [notEnabledEmbed] });
     }
 
     clearInterval(monitoringInterval);  // Stop the monitoring interval
     monitoringChannel = null;  // Reset the monitoring channel
     previousServerStatuses = {};  // Reset the previous statuses
-    await interaction.reply('Monitoring disabled.');
+
+    const disabledEmbed = new EmbedBuilder()
+      .setColor('#FF0000')
+      .setDescription('Monitoring disabled.');
+    await interaction.reply({ embeds: [disabledEmbed] });
   }
-});  // <-- Correctly close the event handler here
+});
+
 
 client.login(token);  // Use the token to log in the bot
 
