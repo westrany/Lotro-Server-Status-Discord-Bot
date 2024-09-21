@@ -157,6 +157,42 @@ client.on('interactionCreate', async interaction => {
       await interaction.editReply('There was an error processing your request.');
     }
   }
+
+  // Monitor command logic
+  if (interaction.commandName === 'monitor') {
+    // Check if monitor is already enabled in this or another channel
+    if (monitoringChannel) {
+      return interaction.reply('Monitoring is already enabled in <#${monitoringChannel}>. Please disable it there first.')
+    }
+
+    // Set channel where command was used as the monitoring channel
+    monitoringChannel = interaction.channel.id;
+
+    //Immediatly check and send current server statuses
+    const serverStatuses = await checkAllServers();  // This function checks all server statuses
+    const allServerEmbed = createAllServerStatusEmbed(serverStatuses);
+    await interaction.reply({ embeds: [allServerEmbed] });
+
+    // Begin monitoring server statuses every 60 seconds
+    monitoringInterval = setInterval(async () => {
+      const currentStatuses = await checkAllServers();
+
+      //Compare current status with previous status
+      if (JSON.stringify(currentStatuses) !== JSON.stringify(previousServerStatuses)) {
+        // If status has changed, send update
+        const updatedEmbed = createAllServerStatusEmbed(currentStatuses);
+        const channel = client.channels.cache.get(monitoringChannel);
+        if (channel) {
+          await channel.send({ embeds: [updatedEmbed] });
+        }
+      }
+
+      // Update previous server statuses
+      previousServerStatuses = currentStatuses;
+    }, 60000);    // 60 seconds interval
+
+    await interaction.followUp('Monitoring enabled! I will update here whenever server statuses change.');
+  }
 });
 
 client.login(token);  // Use the token to log in the bot
