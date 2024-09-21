@@ -9,11 +9,14 @@ const commands = [
       option.setName('server')
         .setDescription('The name of the server you want to check')
         .setRequired(false)),
-  
+
   new SlashCommandBuilder()
     .setName('monitor')
-    .setDescription('Enable server status monitoring in this channel'),
-];
+    .setDescription('Enable server status monitoring in this channel'),  // Define monitor command
 
+  new SlashCommandBuilder()
+  .setName('stop')
+  .setDescription('Disable server status monitoring in the current channel'),
+  
 // Export commands as JSON
 module.exports = commands.map(command => command.toJSON());
