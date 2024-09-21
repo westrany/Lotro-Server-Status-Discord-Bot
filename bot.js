@@ -50,8 +50,9 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log('Started refreshing application (/) commands.');
 
+    // For faster registration during development, we can register commands at the guild level
     await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_APPLICATION_ID), // Use the correct environment variable here
+      Routes.applicationGuildCommands(process.env.DISCORD_APPLICATION_ID, process.env.GUILD_ID),  // Register in a specific guild
       { body: commands }  // Register the commands from commands.js
     );
 
@@ -107,28 +108,22 @@ client.on('interactionCreate', async interaction => {
       let statusMessage;
 
       if (serverName) {
-        // Normalize server name to lowercase for case-insensitive matching
         const normalizedServerName = serverName.toLowerCase();
-
         const serverStatuses = await checkAllServers();  // Fetch all server statuses
 
-        // Convert server names to lowercase for comparison
         const serverKey = Object.keys(serverStatuses).find(
           key => key.toLowerCase() === normalizedServerName
         );
 
         if (serverKey) {
-          // If server name is found, return the status with emoji using an embed
           const statusEmoji = serverStatuses[serverKey] === 'UP' ? getRandomEmoji(happyEmojis) : getRandomEmoji(sadEmojis);
           const embed = createServerStatusEmbed(serverKey, serverStatuses[serverKey], statusEmoji);
           await interaction.editReply({ embeds: [embed] });
         } else {
-          // Server name not found
           statusMessage = `Server "${serverName}" not found.`;
-          await interaction.editReply(statusMessage);  // Send a simple reply if server not found
+          await interaction.editReply(statusMessage);
         }
       } else {
-        // Fetch all server statuses and display in an embed
         const serverStatuses = await checkAllServers();
         let message, color;
 
@@ -161,7 +156,6 @@ client.on('interactionCreate', async interaction => {
 
   // Monitor command logic
   if (interaction.commandName === 'monitor') {
-    // Check if monitor is already enabled in this or another channel
     if (monitoringChannel) {
       const alreadyEnabledEmbed = new EmbedBuilder()
         .setColor('#FFA500')
@@ -169,34 +163,27 @@ client.on('interactionCreate', async interaction => {
       return interaction.reply({ embeds: [alreadyEnabledEmbed] });
     }
 
-    // Set channel where command was used as the monitoring channel
     monitoringChannel = interaction.channel.id;
 
-    // Send the "Monitoring enabled" message as an embed
     const monitoringEmbed = new EmbedBuilder()
       .setColor('#00FF00')
       .setDescription('Monitoring enabled! I will update here whenever server statuses change.');
 
     await interaction.reply({ embeds: [monitoringEmbed] });
 
-    // Immediately check and send current server statuses
-    const serverStatuses = await checkAllServers();  // This function checks all server statuses
+    const serverStatuses = await checkAllServers();
     const allServerEmbed = createAllServerStatusEmbed(serverStatuses);
     await interaction.followUp({ embeds: [allServerEmbed] });
 
-    // Begin monitoring server statuses every 60 seconds
     monitoringInterval = setInterval(async () => {
       const currentStatuses = await checkAllServers();
 
-      // Compare current status with previous status
       if (JSON.stringify(currentStatuses) !== JSON.stringify(previousServerStatuses)) {
-        // If status has changed, send update
         const updatedEmbed = createAllServerStatusEmbed(currentStatuses);
         const channel = client.channels.cache.get(monitoringChannel);
         if (channel) {
           await channel.send({ embeds: [updatedEmbed] });
         }
-        // Update previous server statuses only if changes occurred
         previousServerStatuses = currentStatuses;
       }
     }, 60000);  // 60 seconds interval
@@ -211,9 +198,9 @@ client.on('interactionCreate', async interaction => {
       return interaction.reply({ embeds: [notEnabledEmbed] });
     }
 
-    clearInterval(monitoringInterval);  // Stop the monitoring interval
-    monitoringChannel = null;  // Reset the monitoring channel
-    previousServerStatuses = {};  // Reset the previous statuses
+    clearInterval(monitoringInterval);
+    monitoringChannel = null;
+    previousServerStatuses = {};
 
     const disabledEmbed = new EmbedBuilder()
       .setColor('#FF0000')
@@ -222,6 +209,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-
-client.login(token);  // Use the token to log in the bot
-
+client.login(token);
