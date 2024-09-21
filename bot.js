@@ -203,7 +203,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   // Stop monitoring logic
-  if (interaction.commandName === 'stopmonitor') {
+  if (interaction.commandName === 'stop') {
     if (!monitoringChannel) {
       const notEnabledEmbed = new EmbedBuilder()
         .setColor('#FF0000')
