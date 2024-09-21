@@ -13,6 +13,10 @@ const commands = [
   new SlashCommandBuilder()
     .setName('monitor')
     .setDescription('Enable server status monitoring in this channel'),  // Define monitor command
+
+  new SlashCommandBuilder()
+    .setName('stop')
+    .setDescription('Disable server status monitoring in the current channel'),
 ];
 
 // Export commands as JSON
