@@ -21,15 +21,14 @@ A Discord bot built to monitor and provide updates on the server statuses for th
     3.4. [Environment Variables](#environment-variables)  
     3.5. [Bot Commands](#bot-commands)  
 4. [How to Run the Bot Locally](#how-to-run-the-bot-locally)  
-5. [Deploying the Bot with Railway](#deploying-the-bot-with-railway)  
-6. [Commands Overview](#commands-overview)  
-    6.1. [/status](#status)  
-    6.2. [/monitor](#monitor)  
-7. [Known Issues](#known-issues)  
-8. [Contributions](#contributions)  
-9. [License](#license)  
-10. [Acknowledgements](#acknowledgements)  
-11. [Final Notes](#final-notes)  
+5. [Commands Overview](#commands-overview)  
+    5.1. [/status](#status)  
+    5.2. [/monitor](#monitor)  
+6. [Known Issues](#known-issues)  
+7. [Contributions](#contributions)  
+8. [License](#license)  
+9. [Acknowledgements](#acknowledgements)  
+10. [Final Notes](#final-notes)  
 
 ## Features  
 
@@ -88,14 +87,6 @@ The bot offers the following commands:
 2. **Start the Bot:** To run the bot locally, use the following command:  
 ```npm run start```
 The bot will now be live and ready to interact in your Discord server.
-
-## Deploying the Bot with Railway  
-
-1.**Deploy to Railway:** You can deploy the bot to Railway for 24/7 uptime.  
-    - Link your GitHub repository and deploy the bot directly from the Railway dashboard.  
-    - Set up environment variables (```DISCORD_TOKEN```, ```DISCORD_CLIENT_ID```, ```DISCORD_APPLICATION_ID```) in the Railway environment.  
-
-2. **Monitor Usage:** Railway gives you $5 credit with a free tier which should be enough to keep this running for about 21 days. _I am currently looking for a free alternative._
 
 ## Commands Overview  
 
