@@ -4,7 +4,7 @@ A Discord bot built to monitor and provide updates on the server statuses for th
 
 **🔗🤖 Add this bot to your Discord server [here](https://discord.com/oauth2/authorize?client_id=1285998173294301234&permissions=2147567680&integration_type=0&scope=bot+applications.commands)! 🤖🔗**
 
-**Note: as of 20 Sep 2024, there are some issues with the automatic updating features of this mod. You can still use it with the /status or /server commands, but the /monitor command feature is somewhat broken. I am very sorry about this and doing what I can to fix it.**
+**Update 24 Sep 2024: bot seems to be working as inteded (I recommend adding /monitor to it's own dedicated channel). New features added: bot now tracks status for Bullroarer and I added a /stop command that you can use in the same channel as /monitor to stop the auto monitoring server status updates**
 
 ![image](https://github.com/user-attachments/assets/a984e6b5-5e71-4fe7-b836-e99d9004961f)
 
@@ -35,7 +35,8 @@ A Discord bot built to monitor and provide updates on the server statuses for th
 ![image](https://github.com/user-attachments/assets/a5f85574-5451-4550-9711-571f0cbc8b41)   
 
 - **/status:** Check the status of all LOTRO servers or a specific server.
-- **/monitor:** Monitor server statuses and receive updates when they change.
+- **/monitor:** Monitor server statuses and receive updates when they change. Only use in 1 channel per Discord server.
+- **/stop:** Command to stop the monitor function, must be used on same channel as /monitor.
 - **Status notifications** are embedded for clarity and aesthetics.
 - **Real-time server status updates** using Discord slash commands.
 
@@ -78,6 +79,10 @@ The bot offers the following commands:
 
 2. **/monitor:** Enable real-time monitoring of LOTRO servers.
     - The bot will notify you when servers go down or come back up.
+    - Can only be called in 1 channel per Discord server.
+  
+3. **/stop:** Disable the real-time monitoring of LOTRO servers.
+    - Use on the same channel where you called ```/monitor```.
 
 ## How to Run the Bot Locally
 
@@ -113,15 +118,21 @@ The bot will now be live and ready to interact in your Discord server.
 
 ![image](https://github.com/user-attachments/assets/952d22a3-3212-4287-a0b1-4395cfffac5a)  
 
+### ```/stop```
+
+**Description:** Stops monitoring the status of LOTRO servers. Use in same channel as ```/monitor```.
+
+![image](https://github.com/user-attachments/assets/11c5ae31-a833-48cb-8106-938dd3bc6315)
 
 ## Known Issues  
 
-1. Ensure your Discord bot has the necessary permissions in your server to send messages and respond to slash commands.   
-2. The bot will go to sleep after using all of Railway's free tier $5 credit. _I am currently looking for free alternatives to this._
+1. Bot is currently being hosted for free on FPS. This means that I have to manually click on a button to add more running time to the bot (so if the bot is suddently offline my depest apologies). _I am working on a better alternative._
+
+2. I can't really tell if ```/monitor``` is working as intended since servers don't seem to go up and down all the time. Any feedback on this is very much appreciated! 
 
 ## Contributions  
 
-Feel free to fork this repository and submit pull requests. Issues and feature requests are welcome!  
+Feel free to fork this repository and submit pull requests. Issues and feature requests are always welcome!  
 
 ## License  
 
